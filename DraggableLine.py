@@ -41,23 +41,10 @@ class DraggableLine:
         x0 = self.line.get_xdata()
         y0 = self.line.get_ydata()
         
-        xpress, ypress = self.press
-        
-        dx = (event.xdata - xpress)
-        dy = (event.ydata - ypress)
-        
-        #print "event.data:", event.xdata, event.ydata
-        #print "press:", xpress, ypress
-        #print "dr:", dx, dy
-        
-        #save the current data as press data
-        self.press = event.xdata, event.ydata
+        dx, dy = self.get_dxdy(event)
         
         x0[:] = [x + dx for x in x0]
         y0[:] = [y + dy for y in y0]
-        
-        print dx, dy
-        print x0, y0
         
         self.line.set_xdata(x0)
         self.line.set_ydata(y0)
@@ -69,3 +56,16 @@ class DraggableLine:
         self.line.figure.canvas.mpl_disconnect(self.cid_press)
         self.line.figure.canvas.mpl_disconnect(self.cid_release)
         self.line.figure.canvas.mpl_disconnect(self.cid_motion)
+        
+    def get_dxdy(self, event):
+        """returns change of the line position"""
+        xpress, ypress = self.press
+        
+        dx = (event.xdata - xpress)
+        dy = (event.ydata - ypress)
+        
+        #save the current data as press data
+        self.press = event.xdata, event.ydata
+        
+        return dx, dy
+
