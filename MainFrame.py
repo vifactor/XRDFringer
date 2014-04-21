@@ -25,5 +25,10 @@ class MainFrame(wx.Frame):
         self.cursor = DraggableCursorX(self.axes)
         self.cursor.connect()
         
-
+        self.cid_rightclick = self.canvas.mpl_connect(
+                    'button_press_event', self.onRightClick)
+    
+    def onRightClick(self, event):
+        if event.button == 3:
+            print self.cursor.get_position()
 

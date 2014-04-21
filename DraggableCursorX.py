@@ -19,3 +19,6 @@ class DraggableCursorX(DraggableLine):
         self.press = event.xdata, event.ydata
         
         return dx, 0.0
+    
+    def get_position(self):
+        return self.line.get_xdata()[0]
