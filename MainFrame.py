@@ -6,6 +6,8 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import \
             FigureCanvasWxAgg as FigureCanvas
 import os
+#Draggable line for matplotlib picture
+from DraggableLine import DraggableLine
 
 class MainFrame(wx.Frame):
     def __init__(self, *args, **kwds):
@@ -15,9 +17,14 @@ class MainFrame(wx.Frame):
         # usual Matplotlib functions
         self.figure = Figure()#figsize=(6, 4), dpi=100)
         self.axes = self.figure.add_subplot(111)
-        
         # initialize the FigureCanvas, mapping the figure to
         # the Wx backend
         self.canvas = FigureCanvas(self, wx.ID_ANY, self.figure)
+        
+        #Temporary DraggableLine preparation
+        line, = self.axes.plot([0.0, 0.0], [-1.0, 1.0])
+        self.dline = DraggableLine(line)
+        self.dline.connect()
+        
 
 
