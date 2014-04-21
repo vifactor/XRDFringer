@@ -7,7 +7,7 @@ from matplotlib.backends.backend_wxagg import \
             FigureCanvasWxAgg as FigureCanvas
 import os
 #Draggable line for matplotlib picture
-from DraggableLine import DraggableLine
+from DraggableCursorX import DraggableCursorX
 
 class MainFrame(wx.Frame):
     def __init__(self, *args, **kwds):
@@ -22,9 +22,8 @@ class MainFrame(wx.Frame):
         self.canvas = FigureCanvas(self, wx.ID_ANY, self.figure)
         
         #Temporary DraggableLine preparation
-        line, = self.axes.plot([0.0, 0.0], [-1.0, 1.0])
-        self.dline = DraggableLine(line)
-        self.dline.connect()
+        self.cursor = DraggableCursorX(self.axes)
+        self.cursor.connect()
         
 
 
