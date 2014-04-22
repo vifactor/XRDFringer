@@ -25,10 +25,43 @@ class MainFrame(wx.Frame):
         self.cursor = DraggableCursorX(self.axes)
         self.cursor.connect()
         
+        # Menu Bar
+        self.menubar = wx.MenuBar()
+        wxglade_tmp_menu = wx.Menu()
+        self.Open = wx.MenuItem(wxglade_tmp_menu, wx.ID_OPEN, "&Open", "Open directory", wx.ITEM_NORMAL)
+        wxglade_tmp_menu.AppendItem(self.Open)
+        self.Exit = wx.MenuItem(wxglade_tmp_menu, wx.ID_EXIT, "E&xit", "Terminate the program", wx.ITEM_NORMAL)
+        wxglade_tmp_menu.AppendItem(self.Exit)
+        self.menubar.Append(wxglade_tmp_menu, "File")
+        wxglade_tmp_menu = wx.Menu()
+        self.About = wx.MenuItem(wxglade_tmp_menu, wx.ID_ABOUT, "&About", "Information about this program", wx.ITEM_NORMAL)
+        wxglade_tmp_menu.AppendItem(self.About)
+        self.menubar.Append(wxglade_tmp_menu, "Help")
+        self.SetMenuBar(self.menubar)
+        # Menu Bar end
+        # Menu bindings
+        self.Bind(wx.EVT_MENU, self.onOpen, self.Open)
+        self.Bind(wx.EVT_MENU, self.onExit, self.Exit)
+        self.Bind(wx.EVT_MENU, self.onAbout, self.About)
+        # Menu bindings end
+        
         self.cid_rightclick = self.canvas.mpl_connect(
                     'button_press_event', self.onRightClick)
     
     def onRightClick(self, event):
         if event.button == 3:
             print self.cursor.get_position()
+    
+    #menu event handlers
+    def onOpen(self, event):
+        pass
+    
+    def onExit(self, event):
+        self.Close(True)
+        
+    def onAbout(self, event):
+        #Create a message dialog box
+        dlg = wx.MessageDialog(self, "XRD Fringer v0.1", "XRD", wx.OK)
+        dlg.ShowModal()
+        dlg.Destroy()
 
