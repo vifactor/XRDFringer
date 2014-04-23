@@ -50,9 +50,11 @@ class MainFrame(wx.Frame):
         if event.button == 3:
             #clean axes
             self.axes.cla()
-                
+            
+            x, y = None, None
             try:
-                x, y = self.dataloader.next()
+                while not x and not y:
+                    x, y = self.dataloader.next()
                 self.axes.plot(x, y, 'b-', linewidth = 3)
 
                 #draggable cursor
@@ -83,7 +85,6 @@ class MainFrame(wx.Frame):
         dlg.ShowModal()
         dlg.Destroy()
 
-import itertools
 class DataLoader:
     def __init__(self, directory, pattern):
         """searches for all files from the directory which satisfy the regex"""
