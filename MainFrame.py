@@ -5,7 +5,9 @@ from matplotlib.figure import Figure
 # WxAgg backend. In this case, this is a wxPanel
 from matplotlib.backends.backend_wxagg import \
             FigureCanvasWxAgg as FigureCanvas
+import numpy as np
 import os
+import glob
 #Draggable line for matplotlib picture
 from DraggableCursorX import DraggableCursorX
 
@@ -20,10 +22,6 @@ class MainFrame(wx.Frame):
         # initialize the FigureCanvas, mapping the figure to
         # the Wx backend
         self.canvas = FigureCanvas(self, wx.ID_ANY, self.figure)
-        
-        #Temporary DraggableLine preparation
-        self.cursor = DraggableCursorX(self.axes)
-        self.cursor.connect()
         
         # Menu Bar
         self.menubar = wx.MenuBar()
@@ -50,18 +48,114 @@ class MainFrame(wx.Frame):
     
     def onRightClick(self, event):
         if event.button == 3:
-            print self.cursor.get_position()
+            #clean axes
+            self.axes.cla()
+                
+            try:
+                x, y = self.dataloader.next()
+                self.axes.plot(x, y, 'b-', linewidth = 3)
+
+                #draggable cursor
+                self.cursor = DraggableCursorX(self.axes)
+                self.cursor.connect()
+                
+            except StopIteration:
+                #show save file dialog 
+                print "The end."
+            self.canvas.draw()
     
     #menu event handlers
     def onOpen(self, event):
-        pass
+        dlg = wx.DirDialog(self, "Choose a directory:")
+        if dlg.ShowModal() == wx.ID_OK:
+            self.dirname = dlg.GetPath()
+        dlg.Destroy()
+        
+        self.dataloader = DataLoader(self.dirname, "y-scan*.dat")
+        
     
     def onExit(self, event):
         self.Close(True)
         
     def onAbout(self, event):
         #Create a message dialog box
-        dlg = wx.MessageDialog(self, "XRD Fringer v0.1", "XRD", wx.OK)
+        dlg = wx.MessageDialog(self, "XRD Fringer v0.2", "XRD", wx.OK)
         dlg.ShowModal()
         dlg.Destroy()
 
+import itertools
+class DataLoader:
+    def __init__(self, directory, pattern):
+        """searches for all files from the directory which satisfy the regex"""
+        os.chdir(directory)
+        self.filelist = iter(glob.glob(pattern))
+        self.fileitem = None
+    
+    def __iter__(self):
+        return self
+        
+    def next(self):
+        try:
+            return self.fileitem.next()
+        except (StopIteration, AttributeError):
+            filename = self.filelist.next()
+            self.fileitem = FileItem(filename)
+            self.fileitem.load()
+            return self.fileitem.next()
+
+import csv
+import re
+class FileItem:
+    def __init__(self, filename):
+        """creates an object of fileitem with handy methods"""
+        self.filename = filename
+        self.collection = dict()
+        self.xcoords_iter = iter([-45, -35, -25, -15, -5, 5, 15, 25, 35, 45])
+        
+    def load(self):
+        with open(self.filename, 'rb') as f:
+            csv_file = csv.reader(CommentedFile(f), delimiter='\t')
+            for row in csv_file:
+                if row:
+                    # Omega	2Theta	Phi  	Chi   	X    	Y    	Z    	q_para	q_perp	Intensity
+                    omega, ttheta, phi, chi, x, y, z, q_para, q_perp, intensity = map(float, row)
+                    if y in self.collection:
+                        self.collection[y].append((ttheta, intensity))
+                    else:
+                        self.collection[y] = [(ttheta, intensity)]
+        
+    def getData(self, pos):
+        if pos not in self.collection:
+            return None, None
+        else:
+            x, y = zip(*self.collection[pos])
+            return x, y
+    
+    def getLetterIndex(self):
+        #a index it's a letter between _ and . characters 
+        match = re.search(r".*_(\w)\..*$", self.filename)
+        return match.group(1)
+        
+    def getFilename(self):
+        return self.filename
+    
+    def __iter__(self):
+        return self
+    
+    def next(self):
+        pos = self.xcoords_iter.next()
+        print pos, self.getLetterIndex()
+        return self.getData(pos)
+        
+class CommentedFile:
+    def __init__(self, f, commentstring="#"):
+        self.f = f
+        self.commentstring = commentstring
+    def next(self):
+        line = self.f.next()
+        while line.startswith(self.commentstring):
+            line = self.f.next()
+        return line
+    def __iter__(self):
+        return self
+        
