@@ -55,7 +55,7 @@ class MainFrame(wx.Frame):
             try:
                 while not x and not y:
                     x, y = self.dataloader.next()
-                self.axes.plot(x, y, 'b-', linewidth = 3)
+                self.axes.semilogy(x, y, 'b-', linewidth = 3)
 
                 #draggable cursor
                 self.cursor = DraggableCursorX(self.axes)
