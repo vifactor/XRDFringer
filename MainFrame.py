@@ -49,13 +49,25 @@ class MainFrame(wx.Frame):
     
     def onRightClick(self, event):
         if event.button == 3:
-            #clean axes
-            self.axes.cla()
+        
+            if self.save:
+                #save cursor position from previous data
+                self.positions[(self.l, self.n)] = self.cursor.get_position()
             
             x, y = None, None
             try:
                 while not x and not y:
-                    x, y = self.dataloader.next()
+                    l, n, x, y = self.dataloader.next()
+                    if not x and not y:
+                        self.positions[(l, n)] = 0
+                
+                self.save = True
+                #save indices for the next rightButtonClick
+                self.l = l
+                self.n = n
+                
+                #clean axes
+                self.axes.cla()
                 self.axes.semilogy(x, y, 'b-', linewidth = 3)
 
                 #draggable cursor
@@ -65,8 +77,15 @@ class MainFrame(wx.Frame):
                 self.canvas.draw()
                 
             except StopIteration:
+                self.save = False
+                self.cursor.disconnect()
+                self.canvas.mpl_disconnect(self.cid_rightclick)
+                
                 #show save file dialog
                 if not self.saved:
+                    #save cursor position from previous data
+                    self.positions[(self.l, self.n)] = self.cursor.get_position()
+                    
                     #propose to save file
                     dlg = wx.FileDialog(self, "Save data file", self.dirname, "",
                             "*.*", wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
@@ -74,7 +93,11 @@ class MainFrame(wx.Frame):
                         # save content in the file
                         path = dlg.GetPath()
                         #self.save(path)
+                        print self.positions
+                        
                         self.saved = True
+                        
+                    dlg.Destroy()
                 else:
                     #Create a message dialog box
                     dlg = wx.MessageDialog(self, "Load new data to analize or exit", "Warning", wx.OK)
@@ -89,9 +112,10 @@ class MainFrame(wx.Frame):
         dlg.Destroy()
         
         self.saved = False
+        self.save = False
+        self.positions = {}
         self.dataloader = DataLoader(self.dirname, "y-scan*.dat")
         
-    
     def onExit(self, event):
         self.Close(True)
         
@@ -129,6 +153,12 @@ class FileItem:
         self.collection = dict()
         self.xcoords_iter = iter([-45, -35, -25, -15, -5, 5, 15, 25, 35, 45])
         
+        #a index it's a letter between _ and . characters 
+        match = re.search(r".*_(\w)\..*$", self.filename)
+        self.lindex = match.group(1)
+        
+        self.nindex = 0
+        
     def load(self):
         with open(self.filename, 'rb') as f:
             csv_file = csv.reader(CommentedFile(f), delimiter='\t')
@@ -142,16 +172,13 @@ class FileItem:
                         self.collection[y] = [(ttheta, intensity)]
         
     def getData(self, pos):
+        
         if pos not in self.collection:
-            return None, None
+            x, y = None, None
         else:
             x, y = zip(*self.collection[pos])
-            return x, y
-    
-    def getLetterIndex(self):
-        #a index it's a letter between _ and . characters 
-        match = re.search(r".*_(\w)\..*$", self.filename)
-        return match.group(1)
+        
+        return self.lindex, self.nindex, x, y
         
     def getFilename(self):
         return self.filename
@@ -161,7 +188,8 @@ class FileItem:
     
     def next(self):
         pos = self.xcoords_iter.next()
-        print pos, self.getLetterIndex()
+        self.nindex += 1
+        
         return self.getData(pos)
         
 class CommentedFile:
