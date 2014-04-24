@@ -52,17 +52,17 @@ class MainFrame(wx.Frame):
         
             if self.save:
                 #save cursor position from previous data
-                self.positions[(self.l, self.n)] = self.cursor.get_position()
+                self.positions[(self.l, self.pos)] = self.cursor.get_position()
             
             x, y = None, None
             try:
                 while not x and not y:
-                    l, n, x, y = self.dataloader.next()
+                    l, pos, x, y = self.dataloader.next()
                 
                 self.save = True
                 #save indices for the next rightButtonClick
                 self.l = l
-                self.n = n
+                self.pos = pos
                 
                 #clean axes
                 self.axes.cla()
@@ -82,7 +82,7 @@ class MainFrame(wx.Frame):
                 #show save file dialog
                 if not self.saved:
                     #save cursor position from previous data
-                    self.positions[(self.l, self.n)] = self.cursor.get_position()
+                    self.positions[(self.l, self.pos)] = self.cursor.get_position()
                     
                     #propose to save file
                     dlg = wx.FileDialog(self, "Save data file", self.dirname, "",
@@ -107,8 +107,9 @@ class MainFrame(wx.Frame):
         
         with open(path, 'w') as f:
             for i in range(len(number_positions)):
+                pos = number_positions[i]
                 for letter in letter_positions:
-                    tup = (letter, i)
+                    tup = (letter, pos)
                     if tup in positions_map:
                         f.write('%s\t' % positions_map[tup])
                         #print letter, i, positions_map[tup]
@@ -133,7 +134,7 @@ class MainFrame(wx.Frame):
         
     def onAbout(self, event):
         #Create a message dialog box
-        dlg = wx.MessageDialog(self, "XRD Fringer v0.8", "XRD", wx.OK)
+        dlg = wx.MessageDialog(self, "XRD Fringer v0.81", "XRD", wx.OK)
         dlg.ShowModal()
         dlg.Destroy()
 
@@ -169,7 +170,6 @@ class FileItem:
         match = re.search(r".*_(\w)\..*$", self.filename)
         self.lindex = match.group(1)
         
-        self.nindex = 0
         
     def load(self):
         with open(self.filename, 'rb') as f:
@@ -190,7 +190,7 @@ class FileItem:
         else:
             x, y = zip(*self.collection[pos])
         
-        return self.lindex, self.nindex, x, y
+        return self.lindex, pos, x, y
         
     def getFilename(self):
         return self.filename
@@ -200,7 +200,6 @@ class FileItem:
     
     def next(self):
         pos = self.xcoords_iter.next()
-        self.nindex += 1
         
         return self.getData(pos)
         
