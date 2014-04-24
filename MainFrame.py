@@ -58,8 +58,6 @@ class MainFrame(wx.Frame):
             try:
                 while not x and not y:
                     l, n, x, y = self.dataloader.next()
-                    if not x and not y:
-                        self.positions[(l, n)] = 0
                 
                 self.save = True
                 #save indices for the next rightButtonClick
@@ -135,7 +133,7 @@ class MainFrame(wx.Frame):
         
     def onAbout(self, event):
         #Create a message dialog box
-        dlg = wx.MessageDialog(self, "XRD Fringer v0.2", "XRD", wx.OK)
+        dlg = wx.MessageDialog(self, "XRD Fringer v0.8", "XRD", wx.OK)
         dlg.ShowModal()
         dlg.Destroy()
 
