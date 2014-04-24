@@ -79,7 +79,7 @@ class MainFrame(wx.Frame):
             except StopIteration:
                 self.save = False
                 self.cursor.disconnect()
-                self.canvas.mpl_disconnect(self.cid_rightclick)
+                #self.canvas.mpl_disconnect(self.cid_rightclick)
                 
                 #show save file dialog
                 if not self.saved:
@@ -92,8 +92,7 @@ class MainFrame(wx.Frame):
                     if dlg.ShowModal() == wx.ID_OK:
                         # save content in the file
                         path = dlg.GetPath()
-                        #self.save(path)
-                        print self.positions
+                        self.saveData(path, self.positions)
                         
                         self.saved = True
                         
@@ -104,6 +103,21 @@ class MainFrame(wx.Frame):
                     dlg.ShowModal()
                     dlg.Destroy()
     
+    def saveData(self, path, positions_map):
+        letter_positions = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
+        number_positions = [-45, -35, -25, -15, -5, 5, 15, 25, 35, 45]
+        
+        with open(path, 'w') as f:
+            for i in range(len(number_positions)):
+                for letter in letter_positions:
+                    tup = (letter, i)
+                    if tup in positions_map:
+                        f.write('%s\t' % positions_map[tup])
+                        #print letter, i, positions_map[tup]
+                    else:
+                        f.write('--\t')
+                f.write('\n')
+                    
     #menu event handlers
     def onOpen(self, event):
         dlg = wx.DirDialog(self, "Choose a directory:")
