@@ -69,6 +69,13 @@ class MainFrame(wx.Frame):
                 
                 #clean axes
                 self.axes.cla()
+                
+                #set title of the figure as wafer coordinates
+                self.axes.set_title("%s, %s" % (l, pos))
+                #give title to axes
+                self.axes.set_xlabel(r'$2\theta$ (deg)')
+                self.axes.set_ylabel(r'intensity (cps)')
+                #plot intensity versus 2theta in log scale
                 self.axes.semilogy(x, y, 'b-', linewidth = 3)
 
                 #draggable cursor
