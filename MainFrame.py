@@ -163,10 +163,9 @@ class FileItem:
     def __init__(self, filename):
         """creates an object of fileitem with handy methods"""
         self.filename = filename
-        self.collection = dict()
-        self.xcoords_iter = iter([-45, -35, -25, -15, -5, 5, 15, 25, 35, 45])
+        self.collection = {}
         
-        #a index it's a letter between _ and . characters 
+        #index is a letter between "_" and "." characters 
         match = re.search(r".*_(\w)\..*$", self.filename)
         self.lindex = match.group(1)
         
@@ -182,15 +181,8 @@ class FileItem:
                         self.collection[y].append((ttheta, intensity))
                     else:
                         self.collection[y] = [(ttheta, intensity)]
-        
-    def getData(self, pos):
-        
-        if pos not in self.collection:
-            x, y = None, None
-        else:
-            x, y = zip(*self.collection[pos])
-        
-        return self.lindex, pos, x, y
+                        
+            self.collection_iterator = iter(self.collection)
         
     def getFilename(self):
         return self.filename
@@ -199,9 +191,13 @@ class FileItem:
         return self
     
     def next(self):
-        pos = self.xcoords_iter.next()
+        #key is y position, val is two arrays defining scan
+        key = self.collection_iterator.next()
+        val = self.collection[key]
         
-        return self.getData(pos)
+        x, y = zip(*val)
+        
+        return self.lindex, key, x, y
         
 class CommentedFile:
     def __init__(self, f, commentstring="#"):
