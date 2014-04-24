@@ -45,6 +45,7 @@ class MainFrame(wx.Frame):
         
         self.cid_rightclick = self.canvas.mpl_connect(
                     'button_press_event', self.onRightClick)
+        
     
     def onRightClick(self, event):
         if event.button == 3:
@@ -61,10 +62,24 @@ class MainFrame(wx.Frame):
                 self.cursor = DraggableCursorX(self.axes)
                 self.cursor.connect()
                 
+                self.canvas.draw()
+                
             except StopIteration:
-                #show save file dialog 
-                print "The end."
-            self.canvas.draw()
+                #show save file dialog
+                if not self.saved:
+                    #propose to save file
+                    dlg = wx.FileDialog(self, "Save data file", self.dirname, "",
+                            "*.*", wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
+                    if dlg.ShowModal() == wx.ID_OK:
+                        # save content in the file
+                        path = dlg.GetPath()
+                        #self.save(path)
+                        self.saved = True
+                else:
+                    #Create a message dialog box
+                    dlg = wx.MessageDialog(self, "Load new data to analize or exit", "Warning", wx.OK)
+                    dlg.ShowModal()
+                    dlg.Destroy()
     
     #menu event handlers
     def onOpen(self, event):
@@ -73,6 +88,7 @@ class MainFrame(wx.Frame):
             self.dirname = dlg.GetPath()
         dlg.Destroy()
         
+        self.saved = False
         self.dataloader = DataLoader(self.dirname, "y-scan*.dat")
         
     
