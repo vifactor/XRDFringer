@@ -43,11 +43,13 @@ class MainFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onAbout, self.About)
         # Menu bindings end
         
-        self.cid_rightclick = self.canvas.mpl_connect(
-                    'button_press_event', self.onRightClick)
+        self.cid_right_press = self.canvas.mpl_connect(
+                    'button_press_event', self.onRightPress)
+        self.cid_right_release = self.canvas.mpl_connect(
+                    'button_release_event', self.onRightRelease)
         
     
-    def onRightClick(self, event):
+    def onRightPress(self, event):
         if event.button == 3:
         
             if self.save:
@@ -75,31 +77,37 @@ class MainFrame(wx.Frame):
                 self.canvas.draw()
                 
             except StopIteration:
-                self.save = False
-                self.cursor.disconnect()
-                #self.canvas.mpl_disconnect(self.cid_rightclick)
-                
-                #show save file dialog
+            #show save file dialog
                 if not self.saved:
                     #save cursor position from previous data
                     self.positions[(self.l, self.pos)] = self.cursor.get_position()
+                self.save = False
+                self.time_to_save = True
+                
                     
-                    #propose to save file
-                    dlg = wx.FileDialog(self, "Save data file", self.dirname, "",
-                            "*.*", wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
-                    if dlg.ShowModal() == wx.ID_OK:
-                        # save content in the file
-                        path = dlg.GetPath()
-                        self.saveData(path, self.positions)
-                        
-                        self.saved = True
-                        
+    
+    def onRightRelease(self, event):
+        #on right mouse button release
+        if event.button == 3:
+            if self.saved:
+                #Create a message dialog box
+                dlg = wx.MessageDialog(self, "Load new data to analize or exit", "Warning", wx.OK)
+                dlg.ShowModal()
+                dlg.Destroy()
+            if self.time_to_save:
+                #propose to save file
+                dlg = wx.FileDialog(self, "Save data file", self.dirname, "",
+                            "*", wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
+                if dlg.ShowModal() == wx.ID_OK:
+                    # save content in the file
+                    path = dlg.GetPath()
+                    self.saveData(path, self.positions)
                     dlg.Destroy()
-                else:
-                    #Create a message dialog box
-                    dlg = wx.MessageDialog(self, "Load new data to analize or exit", "Warning", wx.OK)
-                    dlg.ShowModal()
-                    dlg.Destroy()
+                    
+                    #indicates whether data was saved
+                    self.saved = True
+                    self.time_to_save = False
+                    
     
     def saveData(self, path, positions_map):
         letter_positions = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
@@ -126,6 +134,7 @@ class MainFrame(wx.Frame):
         
         self.saved = False
         self.save = False
+        self.time_to_save = False
         self.positions = {}
         self.dataloader = DataLoader(self.dirname, "y-scan*.dat")
         
@@ -134,7 +143,7 @@ class MainFrame(wx.Frame):
         
     def onAbout(self, event):
         #Create a message dialog box
-        dlg = wx.MessageDialog(self, "XRD Fringer v0.81", "XRD", wx.OK)
+        dlg = wx.MessageDialog(self, "XRD Fringer v0.82", "XRD", wx.OK)
         dlg.ShowModal()
         dlg.Destroy()
 
