@@ -77,13 +77,10 @@ class MainFrame(wx.Frame):
                 self.canvas.draw()
                 
             except StopIteration:
-            #show save file dialog
-                if not self.saved:
-                    #save cursor position from previous data
-                    self.positions[(self.l, self.pos)] = self.cursor.get_position()
+                self.cursor.disconnect()
                 self.save = False
-                self.time_to_save = True
-                
+                if not self.saved:
+                    self.time_to_save = True
                     
     
     def onRightRelease(self, event):
@@ -143,7 +140,7 @@ class MainFrame(wx.Frame):
         
     def onAbout(self, event):
         #Create a message dialog box
-        dlg = wx.MessageDialog(self, "XRD Fringer v0.82", "XRD", wx.OK)
+        dlg = wx.MessageDialog(self, "XRD Fringer v0.90", "XRD", wx.OK)
         dlg.ShowModal()
         dlg.Destroy()
 
